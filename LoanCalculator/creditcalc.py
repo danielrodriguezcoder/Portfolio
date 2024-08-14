@@ -19,6 +19,8 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
 
+# Description: Short python application to calculate the missing information for a loan. Enter 4 of the following: interest, payment, principal, periods
+
 import argparse
 import math
 import sys
