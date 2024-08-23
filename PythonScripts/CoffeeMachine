@@ -1,0 +1,171 @@
+
+#  MIT License
+#  Copyright (c) 2024. Daniel Rodriguez-Demers
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to deal
+#  in the Software without restriction, including without limitation the rights
+#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#  copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included in all
+#  copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#  SOFTWARE.
+
+# Short software for vending machine (coffee) using OOP
+
+import sys
+
+
+class CoffeeMachine:
+    def __init__(self, dict_stock):
+        self.status = "menu"
+        self.water = dict_stock["water"]
+        self.milk = dict_stock["milk"]
+        self.coffee = dict_stock["coffee"]
+        self.cups = dict_stock["cups"]
+        self.money = dict_stock["money"]
+        print("Write action (buy, fill, take, remaining, exit): ")
+
+    def user_input(self, choice):
+        if self.status == "menu":
+            return self.menu(choice)
+        elif self.status == "buy":
+            return self.buy(choice)
+        elif self.status in ("fill_water", "fill_milk", "fill_coffee", "fill_cups"):
+            return self.fill(int(choice))
+
+    def question(self):
+        if self.status == "menu":
+            print("Write action (buy, fill, take, remaining, exit): ")
+        elif self.status == "buy":
+            print("What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back to main menu: ")
+        elif self.status == "fill_water":
+            print("Write how many ml of water you want to add: ")
+        elif self.status == "fill_milk":
+            print("Write how many ml of milk you want to add: ")
+        elif self.status == "fill_coffee":
+            print("Write how many grams of coffee beans you want to add: ")
+        elif self.status == "fill_cups":
+            print("Write how many disposable cups you want to add: ")
+
+    def fill(self, to_add):
+        if self.status == "fill_water":
+            self.water += to_add
+            self.status = "fill_milk"
+        elif self.status == "fill_milk":
+            self.milk += to_add
+            self.status = "fill_coffee"
+        elif self.status == "fill_coffee":
+            self.coffee += to_add
+            self.status = "fill_cups"
+        elif self.status == "fill_cups":
+            self.cups += to_add
+            self.status = "menu"
+            print()
+        self.question()
+        return True
+
+    def menu(self, choice):
+        print()
+        if choice == "buy":
+            self.status = "buy"
+        elif choice == "fill":
+            self.status = "fill_water"
+        elif choice == "take":
+            self.take()
+        elif choice == "remaining":
+            self.display_stock()
+        elif choice == "exit":
+            return False
+        else:
+            print("Invalid choice\n")
+        self.question()
+        return True
+
+    def display_stock(self):
+        print("The coffee machine has:")
+        print(f"{self.water} ml of water")
+        print(f"{self.milk} ml of milk")
+        print(f"{self.coffee} g of coffee beans")
+        print(f"{self.cups} cups of disposable")
+        print(f"${self.money} of money\n")
+        return True
+
+    def buy(self, item):
+        if item == "1":  # espresso
+            if self.amount_check(250, 0, 16):
+                self.water -= 250
+                self.coffee -= 16
+                self.cups -= 1
+                self.money += 4
+        elif item == "2":  # latte
+            if self.amount_check(350, 75, 20):
+                self.water -= 350
+                self.milk -= 75
+                self.coffee -= 20
+                self.cups -= 1
+                self.money += 7
+        elif item == "3":  # cappuccino
+            if self.amount_check(200, 100, 12):
+                self.water -= 200
+                self.milk -= 100
+                self.coffee -= 12
+                self.cups -= 1
+                self.money += 6
+        elif item == "back":
+            self.status = "menu"
+        else:
+            print("Wrong input")
+        print()
+        self.question()
+        return True
+
+    def amount_check(self, needed_water, needed_milk, needed_coffee):
+        can_make = True
+        lacking_item = None
+        if self.water < needed_water:
+            lacking_item = "water"
+            can_make = False
+        if self.milk < needed_milk:
+            lacking_item = "milk"
+            can_make = False
+        if self.coffee < needed_coffee:
+            lacking_item = "coffee"
+            can_make = False
+        if self.cups < 1:
+            lacking_item = "cups"
+            can_make = False
+
+        if can_make:
+            print("I have enough resources, making you a coffee!")
+            self.status = "menu"
+            return True
+        else:
+            print(f"Sorry, not enough {lacking_item}!")
+            self.status = "menu"
+            return False
+
+    def take(self):
+        print(f"I gave you ${self.money}\n")
+        self.money = 0
+
+
+def main():
+    stock = {'water': 400, 'milk': 540, 'coffee': 120, 'cups': 9, 'money': 550}
+    # Loop until user chooses exit
+    coffee_machine = CoffeeMachine(stock)
+    coffee_continue = True
+    while coffee_continue:
+        coffee_continue = coffee_machine.user_input(input())
+
+
+if __name__ == '__main__':
+    sys.exit(main())
