@@ -1,0 +1,53 @@
+# ---------------------------------- Web Scraper  ----------------------------------
+# Application that parses and scrapes news articles on a website. The output is
+# to .txt files.
+# ---------------------------------- Web Scraper  ----------------------------------
+import sys
+import string
+import requests
+from bs4 import BeautifulSoup
+from http import HTTPStatus
+import os
+
+ARTICLES_LIST = 'https://www.nature.com/nature/articles?searchType=journalSearch&sort=PubDate&year=2020&page='
+URL_ROOT = 'https://www.nature.com/nature'
+
+
+def main():
+    input_nb_pages = int(input())
+    input_article_type = input()
+    
+    articles_list = []
+    article_saved = False
+    for i in range(input_nb_pages):
+        response = requests.get(f"{ARTICLES_LIST}{i+1}")
+        if response.status_code == HTTPStatus.OK:
+            os.mkdir(f'Page_{i + 1}')
+            soup = BeautifulSoup(response.content, 'html.parser')
+            raw_article_list = soup.find_all('article', attrs={'class': 'u-full-height c-card c-card--flush'})
+            for article in raw_article_list:
+                art_type = article.find('span', class_='c-meta__type').text
+                if art_type == input_article_type:
+                    title = article.find('a', class_='c-card__link u-link-inherit').text
+                    title = title.translate(str.maketrans('', '', string.punctuation))
+                    title = title.replace(' ', '_')
+                    link = article.find('a', {'data-track-action': 'view article'}).get('href')
+                    response_article = requests.get(f'{URL_ROOT}{link}')
+                    if response_article.status_code == HTTPStatus.OK:
+                        soup2 = BeautifulSoup(response_article.content, 'html.parser')
+                        article_body = soup2.find('p', attrs={'class': 'article__teaser'}).text.strip()
+                        articles_list.append({'title': title, 'description': article_body})
+                        file = open(f'Page_{i + 1}/{title}.txt', 'w', encoding='utf-8')
+                        file.write(article_body)
+                        file.close()
+                    else:
+                        print(f'Error: {response_article.status_code} while retrieving article: {link}')
+
+    if article_saved:
+        print(f'Saved all articles')
+    else:
+        print("No News articles were found")
+
+
+if __name__ == '__main__':
+    sys.exit(main())
